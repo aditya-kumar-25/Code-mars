@@ -13,6 +13,7 @@ exports.pushQuestionDirect = async (req, res) => {
       )
     }
 
+    
   try {
     await allQuestions.create({
       difficulty,
