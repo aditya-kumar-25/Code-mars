@@ -1,6 +1,5 @@
 const user = require("../models/userSchema");
 const questions = require("../models/questions");
-const profile = require("../models/profile");
 const OTP = require("../models/otp");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
@@ -12,6 +11,7 @@ const fs = require("fs");
 const ejsTemplatePath = path.join(__dirname, "otpBody.ejs");
 const ejs = require("ejs");
 const allQuestions = require("../models/allQuestions");
+const profile = require("../models/profile");
 
 exports.signup = async (req, res) => {
   try {
@@ -337,5 +337,64 @@ exports.getInfo = async (req , res) => {
         err:err,
       })
     }
+}
+
+exports.getProfileInfo = async (req , res) => {
+
+  const {userHandle} = req.user;
+
+  try
+  {
+    const profileInfo = await user.findOne({userHandle});
+
+    const profileObj = await profile.findById(profileInfo.profile);
+
+    return res.status(200).json({
+      success: true,
+      profile: profileObj, 
+    })
+  }catch(err){
+    return res.status(500).json({
+      success: false,
+      message: 'Internal error while fetching user info',
+    })
+  }
+}
+
+exports.updateProfile = async (req , res) => {
+
+  const userHandle = req.user.userHandle;
+
+  const {data} = req.body;
+
+  try{
+
+    const person = await user.findOne({
+        userHandle,
+    })
+
+    const profileInfo = await profile.findById(person.profile);
+
+    for (const key in profileInfo) {
+      if (data.hasOwnProperty(key) && data[key] !== undefined) {
+        profileInfo[key] = data[key];
+      }
+    }
+
+    profileInfo.save();
+
+    return res.status(200).json({
+      success: true,
+      message: 'Profile updated successfully',
+    })
+
+  } catch(err){
+    console.log(err);
+    return res.status(500).json({
+      success: false,
+      message: err.message,
+    })
+  }
+
 }
 
